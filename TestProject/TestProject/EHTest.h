@@ -5,5 +5,6 @@ public:
 	int TestInt;
 
 	int teset33;
+	float Testfloat;
 };
 
