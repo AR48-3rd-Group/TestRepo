@@ -10,5 +10,16 @@ public:
 	// ÆÐÄ¡ Å×½ºÆ®¿ë ÁÖ¼® 
 
 	// 테스트
+
+
+
+
+
+
+
+
+
+public:
+ 	double TestDouble;
 };
 
