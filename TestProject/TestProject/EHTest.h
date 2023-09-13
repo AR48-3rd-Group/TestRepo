@@ -6,5 +6,22 @@ public:
 
 	int teset33;
 	float Testfloat;
+
+	// ÆÐÄ¡ Å×½ºÆ®¿ë ÁÖ¼® 
+
+	// 테스트
+
+
+
+
+
+
+
+
+
+public:
+ 	double TestDouble;
+private:
+	long long mTestLongLong;
 };
 
