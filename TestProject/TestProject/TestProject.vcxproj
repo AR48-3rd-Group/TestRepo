@@ -132,10 +132,12 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TestProject.h" />
+    <ClInclude Include="Test_JSY.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EHTest.cpp" />
     <ClCompile Include="TestProject.cpp" />
+    <ClCompile Include="Test_JSY.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TestProject.rc" />
