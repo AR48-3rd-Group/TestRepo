@@ -3,7 +3,11 @@
 class Test_JSY
 {
 
-	// VS¿¡¼­ ¼öÁ¤µÊ
+// ë ˆí¬ì§€í† ë¦¬ì—ì„œ ìˆ˜ì •í•¨
+public:
+  int TestInt;
+
+	// VSì—ì„œ ìˆ˜ì •ë¨
 private:
 	long long TestLongLong;
 
