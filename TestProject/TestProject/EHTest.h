@@ -7,17 +7,7 @@ public:
 	int teset33;
 	float Testfloat;
 
-	// ÆÐÄ¡ Å×½ºÆ®¿ë ÁÖ¼® 
-
-	// 테스트
-
-
-
-
-
-
-
-
-
 public:
+ double test11;
+// 테스트 커밋
 };
