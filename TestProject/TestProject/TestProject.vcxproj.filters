@@ -16,6 +16,9 @@
     <Filter Include="7IEH">
       <UniqueIdentifier>{c9cd300b-2c07-48db-9a2b-1a7d904c9d39}</UniqueIdentifier>
     </Filter>
+    <Filter Include="JSY">
+      <UniqueIdentifier>{1930c81d-6ef4-4e85-96b7-5edf8485d0de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -33,6 +36,9 @@
     <ClInclude Include="EHTest.h">
       <Filter>7IEH</Filter>
     </ClInclude>
+    <ClInclude Include="Test_JSY.h">
+      <Filter>JSY</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EHTest.cpp">
@@ -40,6 +46,9 @@
     </ClCompile>
     <ClCompile Include="TestProject.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Test_JSY.cpp">
+      <Filter>JSY</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
