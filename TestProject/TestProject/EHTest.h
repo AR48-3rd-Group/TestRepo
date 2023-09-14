@@ -23,5 +23,9 @@ public:
  	double TestDouble;
 private:
 	long long mTestLongLong;
+
+
+public:
+float tempfloat;
 };
 
