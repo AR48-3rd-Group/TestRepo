@@ -1,5 +1,5 @@
 #pragma once
-
+	
 class Test_JSY
 {
 
@@ -11,6 +11,6 @@ public:
 private:
 	long long TestLongLong;
 
-
+	long long EHTest;
 };
 
