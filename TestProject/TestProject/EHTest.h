@@ -4,6 +4,7 @@ class EHTest
 // github에서 수정
 public:
 	int Itest;
+	int Itest2;
 
 public:
 	int TestInt;
