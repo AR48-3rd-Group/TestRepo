@@ -7,6 +7,8 @@ public:
 	int Itest2;
 	int Itest3;
 public:
+	float Ftest4;
+public:
 	int TestInt;
 	
 	int teset33;
