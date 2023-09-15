@@ -354,25 +354,27 @@ HRESULT InitDevice()
 //--------------------------------------------------------------------------------------
 void CleanupDevice()
 {
-// COM 객체 메모리 누수 체크
-#if defined(DEBUG) || defined(_DEBUG)
-    Microsoft::WRL::ComPtr<ID3D11Debug> dxgiDebug;
-
-    if (SUCCEEDED(g_d3d11Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&dxgiDebug)))
-    {
-        dxgiDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-        dxgiDebug = nullptr;
-    }
-#endif
+//// COM 객체 메모리 누수 체크
+//#if defined(DEBUG) || defined(_DEBUG)
+//    Microsoft::WRL::ComPtr<ID3D11Debug> dxgiDebug;
+//
+//    if (SUCCEEDED(g_d3d11Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&dxgiDebug)))
+//    {
+//        dxgiDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+//        dxgiDebug = nullptr;
+//    }
+//#endif
 
 
     if (g_d3d11DeviceContext) g_d3d11DeviceContext->ClearState();
 
-    if (g_d3d11SwapChain) g_d3d11SwapChain->Release();
-    if (g_d3d11FrameBufferView) g_d3d11FrameBufferView->Release();
+    if (g_vertexBuffer) g_vertexBuffer->Release();
+    if (g_inputLayout) g_inputLayout->Release();
     if (g_vertexShader) g_vertexShader->Release();
     if (g_pixelShader) g_pixelShader->Release();
-    if (g_inputLayout) g_inputLayout->Release();
+    if (g_d3d11FrameBufferView) g_d3d11FrameBufferView->Release();
+    if (g_d3d11SwapChain) g_d3d11SwapChain->Release();
+    if (g_d3d11DeviceContext) g_d3d11DeviceContext->Release();
     if (g_d3d11Device) g_d3d11Device->Release();
 }
 
