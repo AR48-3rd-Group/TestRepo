@@ -47,7 +47,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders.hlsli">
+    <None Include="shaders.hlsl">
       <Filter>소스 파일</Filter>
     </None>
   </ItemGroup>

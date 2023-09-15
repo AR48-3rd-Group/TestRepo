@@ -8,6 +8,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 #include <assert.h>
+#include <wrl.h>
 
 //--------------------------------------------------------------------------------------
 // Global Variables
@@ -59,6 +60,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         else
         {
+            if (global_windowDidResize)
+            {
+                g_d3d11DeviceContext->OMSetRenderTargets(0, 0, 0);
+                g_d3d11FrameBufferView->Release();
+
+                HRESULT res = g_d3d11SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+                assert(SUCCEEDED(res));
+
+                ID3D11Texture2D* d3d11FrameBuffer;
+                res = g_d3d11SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&d3d11FrameBuffer);
+                assert(SUCCEEDED(res));
+
+                res = g_d3d11Device->CreateRenderTargetView(d3d11FrameBuffer, NULL,
+                    &g_d3d11FrameBufferView);
+                assert(SUCCEEDED(res));
+                d3d11FrameBuffer->Release();
+
+                global_windowDidResize = false;
+            }
+
             Render();
         }
     }
@@ -134,6 +155,8 @@ HRESULT InitWindow(HINSTANCE hInstance)
         MessageBoxA(0, "CreateWindowEx failed", "Fatal Error", MB_OK);
         return E_FAIL;
     }    
+
+    return S_OK;
 }
 
 HRESULT InitDevice()
@@ -144,7 +167,7 @@ HRESULT InitDevice()
         ID3D11DeviceContext* baseDeviceContext;
         D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
         UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-        #if defined( _DEBUG )
+        #if defined(DEBUG) || defined(_DEBUG)
                 creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
         #endif
 
@@ -168,7 +191,7 @@ HRESULT InitDevice()
         baseDeviceContext->Release();
     }
 
-    #if defined( _DEBUG )
+    #if defined(DEBUG) || defined(_DEBUG)
         // Set up debug layer to break on D3D11 errors
         ID3D11Debug* d3dDebug = nullptr;
         g_d3d11Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
@@ -304,13 +327,13 @@ HRESULT InitDevice()
     // Create Vertex Buffer
     {
         float vertexData[] = { // x, y, r, g, b, a
-            0.0f - 0.5f,  0.5f, 0.f, 1.f, 0.f, 1.f,
-            0.5f - 0.5f, -0.5f, 1.f, 0.f, 0.f, 1.f,
-            -0.5f - 0.5f, -0.5f, 0.f, 0.f, 1.f, 1.f
+            0.0f,  0.5f, 0.f, 1.f, 0.f, 1.f,
+            0.5f, -0.5f, 1.f, 0.f, 0.f, 1.f,
+            -0.5f, -0.5f, 0.f, 0.f, 1.f, 1.f
         };
         g_stride = 6 * sizeof(float);
         g_numVerts = sizeof(vertexData) / g_stride;
-        g_offset = 0.f;
+        g_offset = 0;
 
         D3D11_BUFFER_DESC vertexBufferDesc = {};
         vertexBufferDesc.ByteWidth = sizeof(vertexData);
@@ -322,6 +345,8 @@ HRESULT InitDevice()
         HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffer);
         assert(SUCCEEDED(hResult));
     }
+
+    return S_OK;
 }
 
 //--------------------------------------------------------------------------------------
@@ -329,7 +354,26 @@ HRESULT InitDevice()
 //--------------------------------------------------------------------------------------
 void CleanupDevice()
 {
+// COM 객체 메모리 누수 체크
+#if defined(DEBUG) || defined(_DEBUG)
+    Microsoft::WRL::ComPtr<ID3D11Debug> dxgiDebug;
 
+    if (SUCCEEDED(g_d3d11Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&dxgiDebug)))
+    {
+        dxgiDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+        dxgiDebug = nullptr;
+    }
+#endif
+
+
+    if (g_d3d11DeviceContext) g_d3d11DeviceContext->ClearState();
+
+    if (g_d3d11SwapChain) g_d3d11SwapChain->Release();
+    if (g_d3d11FrameBufferView) g_d3d11FrameBufferView->Release();
+    if (g_vertexShader) g_vertexShader->Release();
+    if (g_pixelShader) g_pixelShader->Release();
+    if (g_inputLayout) g_inputLayout->Release();
+    if (g_d3d11Device) g_d3d11Device->Release();
 }
 
 //--------------------------------------------------------------------------------------
@@ -337,4 +381,25 @@ void CleanupDevice()
 //--------------------------------------------------------------------------------------
 void Render()
 {
+    FLOAT backgroundColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    g_d3d11DeviceContext->ClearRenderTargetView(g_d3d11FrameBufferView, backgroundColor);
+
+    RECT winRect;
+    GetClientRect(g_hwnd, &winRect);
+    D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (FLOAT)(winRect.right - winRect.left), (FLOAT)(winRect.bottom - winRect.top), 0.0f, 1.0f };
+    g_d3d11DeviceContext->RSSetViewports(1, &viewport);
+
+    g_d3d11DeviceContext->OMSetRenderTargets(1, &g_d3d11FrameBufferView, nullptr);
+
+    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
+
+    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
+    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
+
+    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &g_stride, &g_offset);
+
+    g_d3d11DeviceContext->Draw(g_numVerts, 0);
+
+    g_d3d11SwapChain->Present(1, 0);
 }
