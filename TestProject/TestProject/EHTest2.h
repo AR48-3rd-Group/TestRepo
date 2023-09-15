@@ -1,15 +1,18 @@
 #pragma once
 class EHTest2
 {
-// github ìˆ˜ì •
-pivate:
+
+// VS ¼öÁ¤
+public:
+
+	int Itest1;
+	int Itest2;
+
+// github ¼öÁ¤
+private:
 
   float Ftest1;
   float Ftest2;
-
-public:
-	int Itest1;
-	int Itest2;
 
 };
 
