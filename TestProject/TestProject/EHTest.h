@@ -22,4 +22,5 @@ public:
 private:
 	float fTest;
 	float fTest2;
+	float fTest3;
 };
