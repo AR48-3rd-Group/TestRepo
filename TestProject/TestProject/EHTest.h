@@ -6,6 +6,8 @@ public:
 	int Itest;
 	int Itest2;
 	int Itest3;
+private:
+	int Itest4;
 public:
 	int TestInt;
 	
