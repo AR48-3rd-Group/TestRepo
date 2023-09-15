@@ -24,6 +24,7 @@ ID3D11PixelShader*      g_pixelShader;
 ID3D11InputLayout*      g_inputLayout;
 ID3D11Buffer*           g_vertexBuffer;
 ID3D11Buffer*           g_vertexBuffer2;
+ID3D11Buffer*           g_vertexBuffer3;
 UINT                    g_numVerts;
 UINT                    g_stride;
 UINT                    g_offset;
@@ -328,9 +329,9 @@ HRESULT InitDevice()
     // Create Vertex Buffer
     {
         float vertexData[] = { // x, y, r, g, b, a
-            0.0f - 0.5f,  0.5f, 0.f, 1.f, 0.f, 1.f,
-            0.5f - 0.5f, -0.5f, 1.f, 0.f, 0.f, 1.f,
-            -0.5f - 0.5f, -0.5f, 0.f, 0.f, 1.f, 1.f
+            -1.f,  -1.f, 0.f, 1.f, 0.f, 1.f,
+            -0.5f, 0.f, 1.f, 0.f, 0.f, 1.f,
+            0.f, -1.f, 0.f, 0.f, 1.f, 1.f
         };
         g_stride = 6 * sizeof(float);
         g_numVerts = sizeof(vertexData) / g_stride;
@@ -349,9 +350,9 @@ HRESULT InitDevice()
 
     {
         float vertexData[] = { // x, y, r, g, b, a
-            0.0f + 0.5f,  0.5f, 1.f, 0.f, 0.f, 1.f,
-            0.5f + 0.5f, -0.5f, 0.f, 1.f, 0.f, 1.f,
-            -0.5f + 0.5f, -0.5f, 0.f, 0.f, 1.f, 1.f
+            0.0f,  -1.f, 1.f, 0.f, 0.f, 1.f,
+            0.5f, 0.f, 0.f, 1.f, 0.f, 1.f,
+            1.f , -1.f, 0.f, 0.f, 1.f, 1.f
         };
         g_stride = 6 * sizeof(float);
         g_numVerts = sizeof(vertexData) / g_stride;
@@ -368,6 +369,26 @@ HRESULT InitDevice()
         assert(SUCCEEDED(hResult));
     }
 
+    {
+        float vertexData[] = { // x, y, r, g, b, a
+            -0.5f,  0.f, 0.f, 0.f, 1.f, 1.f,
+            0.f, 1.f, 0.f, 1.f, 0.f, 1.f,
+            0.5f , 0.f, 1.f, 0.f, 0.f, 1.f
+        };
+        g_stride = 6 * sizeof(float);
+        g_numVerts = sizeof(vertexData) / g_stride;
+        g_offset = 0;
+
+        D3D11_BUFFER_DESC vertexBufferDesc = {};
+        vertexBufferDesc.ByteWidth = sizeof(vertexData);
+        vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
+
+        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffer3);
+        assert(SUCCEEDED(hResult));
+    }
     return S_OK;
 }
 
@@ -392,6 +413,7 @@ void CleanupDevice()
 
     if (g_vertexBuffer) g_vertexBuffer->Release();
     if (g_vertexBuffer2) g_vertexBuffer2->Release();
+    if (g_vertexBuffer3) g_vertexBuffer3->Release();
     if (g_inputLayout) g_inputLayout->Release();
     if (g_vertexShader) g_vertexShader->Release();
     if (g_pixelShader) g_pixelShader->Release();
@@ -436,6 +458,18 @@ void Render()
     g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
 
     g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer2, &g_stride, &g_offset);
+
+    g_d3d11DeviceContext->Draw(g_numVerts, 0);
+
+
+    // 세번째 삼각형
+    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
+
+    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
+    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
+
+    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer3, &g_stride, &g_offset);
 
     g_d3d11DeviceContext->Draw(g_numVerts, 0);
 
