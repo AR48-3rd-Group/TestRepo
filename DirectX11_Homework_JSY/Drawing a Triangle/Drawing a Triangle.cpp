@@ -427,6 +427,7 @@ void Render()
 
     g_d3d11DeviceContext->Draw(g_numVerts, 0);
 
+
     // 두번째 삼각형
     g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
