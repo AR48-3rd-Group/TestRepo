@@ -20,4 +20,5 @@ public:
  // VS 수정됨
 private:
 	float fTest;
+	float fTest2;
 };
