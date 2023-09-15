@@ -5,7 +5,7 @@ class EHTest
 public:
 	int Itest;
 	int Itest2;
-
+	int Itest3;
 public:
 	int TestInt;
 	
