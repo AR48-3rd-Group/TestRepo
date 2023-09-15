@@ -39,16 +39,22 @@
     <ClInclude Include="Test_JSY.h">
       <Filter>JSY</Filter>
     </ClInclude>
+    <ClInclude Include="EHTest2.h">
+      <Filter>7IEH</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EHTest.cpp">
       <Filter>7IEH</Filter>
     </ClCompile>
+    <ClCompile Include="Test_JSY.cpp">
+      <Filter>JSY</Filter>
+    </ClCompile>
     <ClCompile Include="TestProject.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Test_JSY.cpp">
-      <Filter>JSY</Filter>
+    <ClCompile Include="EHTest2.cpp">
+      <Filter>7IEH</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

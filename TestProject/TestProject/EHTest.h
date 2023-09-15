@@ -9,6 +9,8 @@ public:
 private:
 	int Itest4;
 public:
+	float Ftest4;
+public:
 	int TestInt;
 	
 	int teset33;
