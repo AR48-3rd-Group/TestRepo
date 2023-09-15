@@ -1,0 +1,4 @@
+﻿  Drawing a Triangle.cpp
+C:\Users\JSY\Desktop\AR48-3rd-Group\TestRepo\DirectX11_Homework_JSY\Drawing a Triangle\Drawing a Triangle.cpp(3,1): warning C4005: 'UNICODE': 매크로 재정의
+C:\Users\JSY\Desktop\AR48-3rd-Group\TestRepo\DirectX11_Homework_JSY\Drawing a Triangle\Drawing a Triangle.cpp(3,1): message : 이전에 명령줄에서 선언된 'UNICODE'
+  Drawing a Triangle.vcxproj -> C:\Users\JSY\Desktop\AR48-3rd-Group\TestRepo\DirectX11_Homework_JSY\x64\Debug\Drawing a Triangle.exe
