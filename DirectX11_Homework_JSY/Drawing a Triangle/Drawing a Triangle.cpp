@@ -1,6 +1,7 @@
 ﻿#define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define UNICODE
+#define TriangleCount 3
 #include <windows.h>
 #include <d3d11_1.h>
 #pragma comment(lib, "d3d11.lib")
@@ -22,9 +23,7 @@ ID3D11RenderTargetView* g_d3d11FrameBufferView;
 ID3D11VertexShader*     g_vertexShader;
 ID3D11PixelShader*      g_pixelShader;
 ID3D11InputLayout*      g_inputLayout;
-ID3D11Buffer*           g_vertexBuffer;
-ID3D11Buffer*           g_vertexBuffer2;
-ID3D11Buffer*           g_vertexBuffer3;
+ID3D11Buffer*           g_vertexBuffers[TriangleCount];
 UINT                    g_numVerts;
 UINT                    g_stride;
 UINT                    g_offset;
@@ -326,7 +325,7 @@ HRESULT InitDevice()
         vsBlob->Release();
     }
 
-    // Create Vertex Buffer
+    // Create Vertex Buffers
     {
         float vertexData[] = { // x, y, r, g, b, a
             -1.f,  -1.f, 0.f, 1.f, 0.f, 1.f,
@@ -344,7 +343,7 @@ HRESULT InitDevice()
 
         D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
 
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffer);
+        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[0]);
         assert(SUCCEEDED(hResult));
     }
 
@@ -365,7 +364,7 @@ HRESULT InitDevice()
 
         D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
 
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffer2);
+        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[1]);
         assert(SUCCEEDED(hResult));
     }
 
@@ -386,7 +385,7 @@ HRESULT InitDevice()
 
         D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
 
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffer3);
+        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[2]);
         assert(SUCCEEDED(hResult));
     }
     return S_OK;
@@ -411,9 +410,11 @@ void CleanupDevice()
 
     if (g_d3d11DeviceContext) g_d3d11DeviceContext->ClearState();
 
-    if (g_vertexBuffer) g_vertexBuffer->Release();
-    if (g_vertexBuffer2) g_vertexBuffer2->Release();
-    if (g_vertexBuffer3) g_vertexBuffer3->Release();
+    for (size_t i = 0; i < TriangleCount; i++)
+    {
+        if (g_vertexBuffers[i]) g_vertexBuffers[i]->Release();
+    }
+
     if (g_inputLayout) g_inputLayout->Release();
     if (g_vertexShader) g_vertexShader->Release();
     if (g_pixelShader) g_pixelShader->Release();
@@ -438,40 +439,19 @@ void Render()
 
     g_d3d11DeviceContext->OMSetRenderTargets(1, &g_d3d11FrameBufferView, nullptr);
 
-    // 첫번째 삼각형
-    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
+    // 삼각형 렌더링
+    for (size_t i = 0; i < TriangleCount; i++)
+    {
+        g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
 
-    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
-    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
+        g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
+        g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
 
-    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &g_stride, &g_offset);
+        g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffers[i], &g_stride, &g_offset);
 
-    g_d3d11DeviceContext->Draw(g_numVerts, 0);
-
-
-    // 두번째 삼각형
-    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
-
-    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
-    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
-
-    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer2, &g_stride, &g_offset);
-
-    g_d3d11DeviceContext->Draw(g_numVerts, 0);
-
-
-    // 세번째 삼각형
-    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
-
-    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
-    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
-
-    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer3, &g_stride, &g_offset);
-
-    g_d3d11DeviceContext->Draw(g_numVerts, 0);
+        g_d3d11DeviceContext->Draw(g_numVerts, 0);
+    }
 
     g_d3d11SwapChain->Present(1, 0);
 }
