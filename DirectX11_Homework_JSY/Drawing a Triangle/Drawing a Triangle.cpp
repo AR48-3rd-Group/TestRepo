@@ -388,6 +388,7 @@ HRESULT InitDevice()
         HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[2]);
         assert(SUCCEEDED(hResult));
     }
+
     return S_OK;
 }
 
