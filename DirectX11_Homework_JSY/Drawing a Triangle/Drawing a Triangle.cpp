@@ -11,6 +11,28 @@
 #include <assert.h>
 #include <wrl.h>
 
+
+#include <DirectXMath.h>
+
+using namespace DirectX;
+
+//--------------------------------------------------------------------------------------
+// Structures
+//--------------------------------------------------------------------------------------
+struct SimpleVertex
+{
+    XMFLOAT3 Pos;
+    XMFLOAT4 Color;
+};
+
+
+struct ConstantBuffer
+{
+    XMMATRIX mWorld;
+    XMMATRIX mView;
+    XMMATRIX mProjection;
+};
+
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
@@ -23,7 +45,13 @@ ID3D11RenderTargetView* g_d3d11FrameBufferView;
 ID3D11VertexShader*     g_vertexShader;
 ID3D11PixelShader*      g_pixelShader;
 ID3D11InputLayout*      g_inputLayout;
-ID3D11Buffer*           g_vertexBuffers[TriangleCount];
+ID3D11Buffer*           g_vertexBuffer;
+
+ID3D11Buffer*           g_pConstantBuffer;
+XMMATRIX                g_World;
+XMMATRIX                g_View;
+XMMATRIX                g_Projection;
+
 UINT                    g_numVerts;
 UINT                    g_stride;
 UINT                    g_offset;
@@ -316,7 +344,7 @@ HRESULT InitDevice()
     {
         D3D11_INPUT_ELEMENT_DESC inputElementDesc[] =
         {
-            { "POS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "COL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
         };
 
@@ -327,67 +355,44 @@ HRESULT InitDevice()
 
     // Create Vertex Buffers
     {
-        float vertexData[] = { // x, y, r, g, b, a
-            -1.f,  -1.f, 0.f, 1.f, 0.f, 1.f,
-            -0.5f, 0.f, 1.f, 0.f, 0.f, 1.f,
-            0.f, -1.f, 0.f, 0.f, 1.f, 1.f
+        // Create vertex buffer
+        SimpleVertex vertices[] =
+        {
+            XMFLOAT3(0.0f, 0.5f, 0.5f), XMFLOAT4(1.f, 0.f, 0.f, 0.f),
+            XMFLOAT3(0.5f, -0.5f, 0.5f), XMFLOAT4(0.f, 1.f, 0.f, 0.f),
+            XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0.f, 0.f, 1.f, 0.f)
         };
-        g_stride = 6 * sizeof(float);
-        g_numVerts = sizeof(vertexData) / g_stride;
+        D3D11_BUFFER_DESC bd;
+        ZeroMemory(&bd, sizeof(bd));
+        bd.Usage = D3D11_USAGE_DEFAULT;
+        bd.ByteWidth = sizeof(SimpleVertex) * 3;
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = 0;
+        D3D11_SUBRESOURCE_DATA InitData;
+        ZeroMemory(&InitData, sizeof(InitData));
+        InitData.pSysMem = vertices;
+        HRESULT hResult = g_d3d11Device->CreateBuffer(&bd, &InitData, &g_vertexBuffer);
+        if (FAILED(hResult))
+            return E_FAIL;
+ 
+        g_stride = sizeof(SimpleVertex);
         g_offset = 0;
+        g_numVerts = sizeof(vertices) / g_stride;
 
-        D3D11_BUFFER_DESC vertexBufferDesc = {};
-        vertexBufferDesc.ByteWidth = sizeof(vertexData);
-        vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        // Create the constant buffer
+        bd.Usage = D3D11_USAGE_DEFAULT;
+        bd.ByteWidth = sizeof(ConstantBuffer);
+        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        bd.CPUAccessFlags = 0;
+        hResult = g_d3d11Device->CreateBuffer(&bd, NULL, &g_pConstantBuffer);
+        if (FAILED(hResult))
+            return E_FAIL;
 
-        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
-
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[0]);
-        assert(SUCCEEDED(hResult));
+        g_World = XMMatrixIdentity();
+        g_View = XMMatrixIdentity();
+        g_Projection = XMMatrixIdentity();
     }
 
-    {
-        float vertexData[] = { // x, y, r, g, b, a
-            0.0f,  -1.f, 1.f, 0.f, 0.f, 1.f,
-            0.5f, 0.f, 0.f, 1.f, 0.f, 1.f,
-            1.f , -1.f, 0.f, 0.f, 1.f, 1.f
-        };
-        g_stride = 6 * sizeof(float);
-        g_numVerts = sizeof(vertexData) / g_stride;
-        g_offset = 0;
-
-        D3D11_BUFFER_DESC vertexBufferDesc = {};
-        vertexBufferDesc.ByteWidth = sizeof(vertexData);
-        vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
-
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[1]);
-        assert(SUCCEEDED(hResult));
-    }
-
-    {
-        float vertexData[] = { // x, y, r, g, b, a
-            -0.5f,  0.f, 0.f, 0.f, 1.f, 1.f,
-            0.f, 1.f, 0.f, 1.f, 0.f, 1.f,
-            0.5f , 0.f, 1.f, 0.f, 0.f, 1.f
-        };
-        g_stride = 6 * sizeof(float);
-        g_numVerts = sizeof(vertexData) / g_stride;
-        g_offset = 0;
-
-        D3D11_BUFFER_DESC vertexBufferDesc = {};
-        vertexBufferDesc.ByteWidth = sizeof(vertexData);
-        vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { vertexData };
-
-        HRESULT hResult = g_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &g_vertexBuffers[2]);
-        assert(SUCCEEDED(hResult));
-    }
 
     return S_OK;
 }
@@ -411,11 +416,8 @@ void CleanupDevice()
 
     if (g_d3d11DeviceContext) g_d3d11DeviceContext->ClearState();
 
-    for (size_t i = 0; i < TriangleCount; i++)
-    {
-        if (g_vertexBuffers[i]) g_vertexBuffers[i]->Release();
-    }
-
+    if (g_vertexBuffer) g_vertexBuffer->Release();
+    if (g_pConstantBuffer) g_pConstantBuffer->Release();
     if (g_inputLayout) g_inputLayout->Release();
     if (g_vertexShader) g_vertexShader->Release();
     if (g_pixelShader) g_pixelShader->Release();
@@ -440,19 +442,38 @@ void Render()
 
     g_d3d11DeviceContext->OMSetRenderTargets(1, &g_d3d11FrameBufferView, nullptr);
 
+    // Update our time
+    static float t = 0.0f;
+
+    static DWORD dwTimeStart = 0;
+    DWORD dwTimeCur = GetTickCount();
+    if (dwTimeStart == 0)
+        dwTimeStart = dwTimeCur;
+    t = (dwTimeCur - dwTimeStart) / 1000.0f;
+
+    // 회전 행렬 적용
+    XMMATRIX rotationMatrix = XMMatrixRotationZ(t);
+    g_World = rotationMatrix * XMMatrixScaling(2.f, 2.f, 2.f);
+
+    // Update variables
+    ConstantBuffer cb;
+    cb.mWorld = XMMatrixTranspose(g_World);
+    cb.mView = XMMatrixTranspose(g_View);
+    cb.mProjection = XMMatrixTranspose(g_Projection);
+    g_d3d11DeviceContext->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);
+
     // 삼각형 렌더링
-    for (size_t i = 0; i < TriangleCount; i++)
-    {
-        g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
+    g_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    g_d3d11DeviceContext->IASetInputLayout(g_inputLayout);
 
-        g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
-        g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
+    g_d3d11DeviceContext->VSSetShader(g_vertexShader, nullptr, 0);
+    g_d3d11DeviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+    g_d3d11DeviceContext->PSSetShader(g_pixelShader, nullptr, 0);
 
-        g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffers[i], &g_stride, &g_offset);
+    g_d3d11DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &g_stride, &g_offset);
 
-        g_d3d11DeviceContext->Draw(g_numVerts, 0);
-    }
+    g_d3d11DeviceContext->Draw(g_numVerts, 0);
+    
 
     g_d3d11SwapChain->Present(1, 0);
 }
